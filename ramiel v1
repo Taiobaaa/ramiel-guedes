@@ -1,0 +1,109 @@
+//3 5 4 9 10 11
+#define ENA 11 
+#define IN1 6
+#define IN2 7
+
+//3 5 4 9 10 11
+#define ENB 10
+#define IN3 8
+#define IN4 9
+
+#define SensorDireita   3
+#define SensorEsquerda  5
+
+#define velocidadeA 652
+#define velocidadeB 65
+
+#define BRANCO  LOW
+#define PRETO   HIGH
+
+//Motor A DIREITA
+//Motor B ESQUERDA
+
+void frente(){
+  digitalWrite(IN1,LOW);
+  digitalWrite(IN2,HIGH);//in2 frente
+  digitalWrite(IN3,HIGH);//in3 frente
+  digitalWrite(IN4,LOW);
+}
+
+void direita(){
+  digitalWrite(IN1,HIGH);
+  digitalWrite(IN2,LOW);
+  digitalWrite(IN3,HIGH);
+  digitalWrite(IN4,LOW);
+}
+
+void esquerda(){
+  digitalWrite(IN1,LOW);
+  digitalWrite(IN2,HIGH);
+  digitalWrite(IN3,LOW);
+  digitalWrite(IN4,HIGH);
+}
+
+void parar(){
+  digitalWrite(IN1,LOW);
+  digitalWrite(IN2,LOW);
+  digitalWrite(IN3,LOW);
+  digitalWrite(IN4,LOW);
+}
+
+ void motora(){
+  delay(1000);
+  analogWrite(ENA,velocidadeA);
+  digitalWrite(IN1,LOW);
+  digitalWrite(IN2,HIGH);
+  delay(1000);
+  digitalWrite(IN1,LOW);
+  digitalWrite(IN2,HIGH);
+  }
+void setup() {
+
+  Serial.begin(9600);
+  
+  pinMode(ENA,OUTPUT);
+  pinMode(IN1,OUTPUT);
+  pinMode(IN2,OUTPUT);
+  pinMode(ENB,OUTPUT);
+  pinMode(IN3,OUTPUT);
+  pinMode(IN4,OUTPUT);
+
+  pinMode(SensorDireita,INPUT);
+  pinMode(SensorEsquerda,INPUT);
+
+ analogWrite(ENA,velocidadeA);
+ analogWrite(ENB,velocidadeB);
+  
+  parar();
+ 
+}
+
+void loop() {
+
+ int lsd = digitalRead(SensorDireita);
+  int lse = digitalRead(SensorEsquerda);
+  Serial.print("Leitura do Sensor da Direita: ");
+  Serial.println(lsd);
+  Serial.print("Leitura do Sensor da Esquerda: ");
+  Serial.println(lse);
+
+  Serial.print("Acao: ");
+  //SE os dois sensosres lerem branco?
+  if(lsd == BRANCO and lse == BRANCO){
+    frente();
+    Serial.println("FRENTE");
+  }
+  if(lse == PRETO and lsd == BRANCO){
+    esquerda();
+    Serial.println("ESQUERDA");
+  }
+  if(lsd == PRETO and lse == BRANCO){
+    direita();
+    Serial.println("DIREITA");
+  }
+  if(lsd == PRETO and lse == PRETO){
+    parar();
+    Serial.println("PARAR");
+  }
+
+}
