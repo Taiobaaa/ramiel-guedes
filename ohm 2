@@ -1,0 +1,180 @@
+import pygame
+import math
+import time
+
+# Inicialização do pygame
+pygame.init()
+
+# Configurações da tela
+tela = pygame.display.set_mode((800, 600))
+pygame.display.set_caption('Ohm Vs Sobrecargas!')
+tela.fill((255, 255, 255))
+pygame.display.flip()
+        
+# Barra de vida
+class vidaBarra():
+    def __init__(self, x, y, a, l, hpMaximo):
+        self.x = x
+        self.y = y
+        self.a = a
+        self.l = l
+        self.hp = hpMaximo
+        self.hpMaximo = hpMaximo
+        self.last_hit_time = time.time()  # Momento da última redução de vida
+        self.hit_interval = 1  # Intervalo de redução de vida em segundos
+
+    def draw(self, superficie):
+        ratio = self.hp / self.hpMaximo
+        pygame.draw.rect(superficie, (139, 0, 0), (self.x, self.y, self.a, self.l))
+        pygame.draw.rect(superficie, (0, 255, 0), (self.x, self.y, self.a * ratio, self.l))
+
+    def reduce_hp(self, amount):
+        self.hp -= amount
+        if self.hp < 0:
+            self.hp = 0
+
+Vidabarra = vidaBarra(1, 2, 250, 25, 100)
+
+# Classe para representar projéteis
+class Projétil():
+    def __init__(self, x, y, direction):
+        self.x = x
+        self.y = y
+        self.direction = direction
+
+    def move(self):
+        if self.direction == 'left':
+            self.x -= movB
+        elif self.direction == 'right':
+            self.x += movB
+        elif self.direction == 'up':
+            self.y -= movB
+        elif self.direction == 'down':
+            self.y += movB
+
+    def draw(self, superficie):
+        pygame.draw.rect(superficie, (0, 0, 255), (self.x, self.y, 10, 10))
+
+# Função para disparar um projétil
+def disparar_projétil(x, y, direction):
+    projeteis.append(Projétil(x, y, direction))
+
+# Posição inicial do jogador
+(x, y) = (400, 300)
+movW = 0.5
+movD = 0.5
+movA = 0.5
+movS = 0.5
+movB = 1
+fps = 60
+(xB, yB) = (0, 0)
+
+running = True
+
+# Posição inicial do inimigo
+enemy_x = 35
+enemy_y = 35
+enemy_speed = 0.3  # Velocidade do inimigo
+
+collision_cooldown = 2  # Tempo em segundos antes de permitir outra colisão
+last_collision_time = 0
+
+# Criar a superfície do inimigo
+enemy = pygame.Surface((45, 45))
+enemy.fill((255, 0, 0))
+
+# Lista para armazenar os projéteis
+projeteis = []
+
+# Loop principal do jogo
+while running:
+    # Desenhar barra de vida
+    Vidabarra.draw(tela)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    # Disparar um projétil na direção atual ou última direção do jogador
+                    if keys[pygame.K_LEFT] or keys[ord('a')]:
+                        disparar_projétil(x, y, 'left')
+                    elif keys[pygame.K_RIGHT] or keys[ord('d')]:
+                        disparar_projétil(x, y, 'right')
+                    elif keys[pygame.K_UP] or keys[ord('w')]:
+                        disparar_projétil(x, y, 'up')
+                    elif keys[pygame.K_DOWN] or keys[ord('s')]:
+                        disparar_projétil(x, y, 'down')
+
+    # MOVIMENTAÇÃO DO JOGADOR
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] or keys[ord('a')]:
+        x -= movA
+    if keys[pygame.K_RIGHT] or keys[ord('d')]:
+        x += movD
+    if keys[pygame.K_DOWN] or keys[ord('s')]:
+        y += movS
+    if keys[pygame.K_UP] or keys[ord('w')]:
+        y -= movW
+
+    # Atualizar a posição do jogador
+    player = pygame.draw.rect(tela, (255, 255, 255), (x, y, 45, 45))
+
+    # MOVIMENTAÇÃO DO INIMIGO EM DIREÇÃO AO JOGADOR
+    angle = math.atan2(y - enemy_y, x - enemy_x)
+    enemy_x += enemy_speed * math.cos(angle)
+    enemy_y += enemy_speed * math.sin(angle)
+
+    # Atualizar a posição do inimigo
+    tela.blit(enemy, (enemy_x, enemy_y))
+
+    # Verificar colisão entre jogador e inimigo
+    if player.colliderect(enemy.get_rect(topleft=(enemy_x, enemy_y))):
+        current_time = time.time()
+        if current_time - last_collision_time >= collision_cooldown:
+            Vidabarra.reduce_hp(5)  # Reduz 5 de vida quando ocorre uma colisão
+            last_collision_time = current_time
+            # Remove o inimigo da tela
+            enemy_x = -100  # Move o inimigo para uma posição fora da tela
+            enemy_y = -100
+
+    # COLISÃO COM A BORDA DA TELA
+    limiteW = pygame.draw.rect(tela, (0, 0, 0), (0, 0, 800, 1))
+    limiteD = pygame.draw.rect(tela, (0, 0, 0), (799, 0, 1, 600))
+    limiteA = pygame.draw.rect(tela, (0, 0, 0), (0, 0, 1, 600))
+    limiteS = pygame.draw.rect(tela, (0, 0, 0), (0, 599, 800, 1))
+    if player.colliderect(limiteW):
+        movW = 0
+    else:
+        movW = 0.5
+    if player.colliderect(limiteA):
+        movA = 0
+    else:
+        movA = 0.5
+    if player.colliderect(limiteD):
+        movD = 0
+    else:
+        movD = 0.5
+    if player.colliderect(limiteS):
+        movS = 0
+    else:
+        movS = 0.5
+
+    # Atualizar e desenhar os projéteis
+    for proj in projeteis:
+        proj.move()
+        proj.draw(tela)
+    
+    #if enemy.colliderect(proj.get_rect(topleft=(proj.x, proj.y))):
+       # enemy_x = -100  # Move o inimigo para uma posição fora da tela
+       # enemy_y = -100
+
+    # Remova os projéteis que saíram da tela.
+    projeteis = [proj for proj in projeteis if 0 <= proj.x <= 800 and 0 <= proj.y <= 600]
+
+    # Atualizar a tela
+    pygame.display.update()
+    tela.fill((0, 0, 0))
+
+# Finalizar o pygame
+pygame.quit()
